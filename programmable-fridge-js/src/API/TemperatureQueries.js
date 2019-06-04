@@ -1,6 +1,6 @@
 import axios from "axios";
 
-axios.defaults.baseURL = "localhost:3030";
+axios.defaults.baseURL = "http://localhost:3030";
 axios.defaults.withCredentials = true;
 
 export const getCurrentTemperature = async () => {

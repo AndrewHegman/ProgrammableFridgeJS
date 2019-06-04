@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Wine Fridge Server Test</title>
+	</head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+
+	<body>
+		<div id="main">
+			<input id="textInput" type="text" value="36" />
+			<button id="button"></button>
+			<p id="currentTemperature">Current temperature: 36</p>
+			<p id="targetTemperature">Target temperature: 31.5</p>
+			<p id="screenId">Screen: 0</p>
+		</div>
+	</body>
+
+	<script src="http://localhost:3030/socket.io/socket.io.js"></script>
+	<script>
+		const socket = io.connect("http://localhost:3030");
+
+		const element = document.getElementById("main");
+		const button = document.getElementById("button");
+		const input = document.getElementById("textInput");
+		const currentTemperatureP = document.getElementById("currentTemperature");
+		const targetTemperatureP = document.getElementById("targetTemperature");
+		const screenIdP = document.getElementById("screenId");
+
+		socket.on("getCurrentStatus", () =>
+			socket.emit("currentStatus", {
+				screen: 0,
+				currentTemperature: 36,
+				targetTemperature: 31.5
+			})
+		);
+
+		socket.on(
+			"updateCurrentTemperature",
+			(data) =>
+				(currentTemperatureP.innerHTML = `Current temperature: ${data.data}`)
+		);
+
+		socket.on("changeScreen", (data) => {
+			screenIdP.innerHTML = `Screen: ${data.data}`;
+		});
+
+		socket.on("changeTargetTemperature", (data) => {
+			targetTemperatureP.innerHTML = `Target temperature: ${data.data}`;
+		});
+
+		button.innerHTML = "Update temperature";
+
+		button.onclick = () => {
+			socket.emit("currentTemperatureChanged", { data: input.value });
+		};
+	</script>
+</html>

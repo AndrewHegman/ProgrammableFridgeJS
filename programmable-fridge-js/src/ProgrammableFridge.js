@@ -3,56 +3,79 @@ import React, { Component } from "react";
 import LCDEmulator from "./LCDEmulator/LCDEmulator";
 import ControlButtons from "./ControlButtons/ControlButtonContainer";
 
-import { getCurrentScreen, setCurrentScreen } from "./API/LCDScreenQueries";
-import {
-	getCurrentTemperature,
-	getTargetTemperature
-} from "./API/TemperatureQueries";
+import io from "socket.io-client";
 
-class ProgrammableFridge extends Component {
+class ProgrammableFridgeEmulator extends Component {
 	constructor(props) {
 		super(props);
 
 		this.state = {
-			screen: 0,
+			screen: 3,
 			currentTemperature: 0,
 			targetTemperature: 0
 		};
+
+		this.socket = io.connect("http://localhost:3030");
 	}
 
 	componentDidMount = async () => {
-		let screen = null;
-		let currentTemperature = null;
-		let targetTemperature = null;
-
-		try {
-			screen = await getCurrentScreen();
-		} catch (error) {
-			screen = 2;
-			console.error(error);
-		}
-
-		screen = 2;
-
-		try {
-			currentTemperature = await getCurrentTemperature();
-		} catch (error) {
-			currentTemperature = 0.0;
-			console.error(error);
-		}
-
-		try {
-			targetTemperature = await getTargetTemperature();
-		} catch (error) {
-			targetTemperature = 0.0;
-			console.error(error);
-		}
-
-		this.setState({
-			screen,
-			currentTemperature,
-			targetTemperature
+		this.socket.on("connected", (data) => {
+			console.log(data);
 		});
+
+		this.socket.on("currentStatus", (data) => {
+			this.setState({
+				screen: data.screen,
+				currentTemperature: data.currentTemperature,
+				targetTemperature: data.targetTemperature
+			});
+		});
+
+		this.socket.on("updateCurrentTemperature", (data) => {
+			this.setState({ currentTemperature: data.data });
+		});
+
+		this.socket.on("updateTargetTemperature", (data) => {
+			this.setState({ targetTemperature: data.data });
+		});
+
+		this.socket.on("updateScreen", (data) => {
+			this.setState({ screen: data.data });
+		});
+
+		this.socket.emit("getCurrentStatus");
+	};
+
+	buttonPressed = (button) => {
+		// Regardless of current screen, handle middle button press
+		if (button === "middle") {
+			this.socket.emit("changeScreen", {
+				data: this.state.screen === 1 ? 0 : 1
+			});
+
+			this.setState((prevState) => ({
+				screen: prevState.screen === 1 ? 0 : 1
+			}));
+		}
+
+		// Only handle left/right button press if on screen 1
+		else if (this.state.screen === 1) {
+			if (button === "left") {
+				this.socket.emit("changeTargetTemperature", {
+					data: this.state.targetTemperature - 0.5
+				});
+				this.setState((prevState) => ({
+					targetTemperature: prevState.targetTemperature - 0.5
+				}));
+			} else if (button === "right") {
+				this.socket.emit("changeTargetTemperature", {
+					data: this.state.targetTemperature + 0.5
+				});
+				this.setState((prevState) => ({
+					targetTemperature: prevState.targetTemperature + 0.5
+				}));
+			}
+		}
 	};
 
 	render() {
@@ -63,10 +86,10 @@ class ProgrammableFridge extends Component {
 					currentTemperature={this.state.currentTemperature}
 					targetTemperature={this.state.targetTemperature}
 				/>
-				<ControlButtons screen={this.state.screen} />
+				<ControlButtons buttonPressed={this.buttonPressed} />
 			</>
 		);
 	}
 }
 
-export default ProgrammableFridge;
+export default ProgrammableFridgeEmulator;

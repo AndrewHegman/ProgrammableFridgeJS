@@ -1,23 +1,8 @@
 import React, { Component } from "react";
 
 import ControlButton from "./ControlButton";
-import { getCurrentScreen, setCurrentScreen } from "../API/LCDScreenQueries";
 
 class ControlButtonContainer extends Component {
-	constructor(props) {
-		super(props);
-
-		this.state = {};
-	}
-
-	leftButtonPressed = async () => {
-		const currentScreen = await getCurrentScreen();
-		if (currentScreen === 0) {
-			return;
-		} else if (currentScreen === 1) {
-		}
-	};
-
 	render() {
 		return (
 			<div
@@ -30,9 +15,9 @@ class ControlButtonContainer extends Component {
 					textAlign: "center"
 				}}
 			>
-				<ControlButton handleClick={this.leftButtonPressed} />
-				<ControlButton handleClick={this.middleButtonPressed} />
-				<ControlButton handleClick={this.rightButtonPressed} />
+				<ControlButton handleClick={() => this.props.buttonPressed("left")} />
+				<ControlButton handleClick={() => this.props.buttonPressed("middle")} />
+				<ControlButton handleClick={() => this.props.buttonPressed("right")} />
 			</div>
 		);
 	}
