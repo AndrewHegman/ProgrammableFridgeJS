@@ -33,7 +33,6 @@ class LCDEmulator extends Component {
 		} else if (this.props.screen === 3) {
 			text = this.formatTextForScreen("Attempting to connect...");
 		}
-
 		return (
 			<div
 				style={{

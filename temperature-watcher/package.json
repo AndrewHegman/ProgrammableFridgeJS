@@ -1,0 +1,22 @@
+{
+  "name": "temperature_watcher",
+  "version": "1.0.0",
+  "description": "",
+  "main": "temperatureWatcher.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndrewHegman/ProgrammableFridgeJS.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AndrewHegman/ProgrammableFridgeJS/issues"
+  },
+  "homepage": "https://github.com/AndrewHegman/ProgrammableFridgeJS#readme",
+  "dependencies": {
+    "socketio": "^1.0.0"
+  }
+}

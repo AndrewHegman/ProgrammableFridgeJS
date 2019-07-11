@@ -5,7 +5,7 @@ axios.defaults.withCredentials = true;
 
 export const getCurrentTemperature = async () => {
 	try {
-		return await axios.get("/currenttemperature");
+		return await axios.get("/temperature/current");
 	} catch (error) {
 		return error;
 	}
@@ -13,7 +13,7 @@ export const getCurrentTemperature = async () => {
 
 export const getTargetTemperature = async () => {
 	try {
-		return await axios.get("/targettemperature");
+		return await axios.get("/temperature/target");
 	} catch (error) {
 		return error;
 	}
@@ -21,7 +21,7 @@ export const getTargetTemperature = async () => {
 
 export const setTargetTemperature = async () => {
 	try {
-		return await axios.put("/targettemperature");
+		return await axios.put("/temperature/target");
 	} catch (error) {
 		return error;
 	}

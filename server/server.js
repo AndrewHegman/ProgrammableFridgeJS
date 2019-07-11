@@ -25,7 +25,7 @@ const provision = async () => {
 
 	server.route({
 		method: "GET",
-		path: "/currenttemperature",
+		path: "/temperature/current",
 		handler: async (request) => {
 			try {
 				// return await getCurrentTemperature();
@@ -38,7 +38,7 @@ const provision = async () => {
 
 	server.route({
 		method: "GET",
-		path: "/targettemperature",
+		path: "/temperature/target",
 		handler: async (request) => {
 			try {
 				// return await getTargetTemperature();
@@ -51,7 +51,7 @@ const provision = async () => {
 
 	server.route({
 		method: "PUT",
-		path: "/currenttemperature",
+		path: "/temperature/current",
 		handler: async (request) => {
 			try {
 				return await setCurrentTemperature();
@@ -63,7 +63,7 @@ const provision = async () => {
 
 	server.route({
 		method: "PUT",
-		path: "/targettemperature",
+		path: "/temperature/target",
 		handler: async (request) => {
 			try {
 				return await setTargetTemperature();
@@ -90,32 +90,17 @@ const provision = async () => {
 	});
 
 	const io = require("socket.io")(server.listener);
+	let tempWatcherConnected = false;
+	let emulatorConnected = false;
 
-	io.on("connection", (socket) => {
-		socket.on("getCurrentStatus", () => {
-			io.emit("getCurrentStatus");
+	io.on("connect", (socket) => {
+		socket.on("join", (room) => {
+			socket.join(room);
 		});
 
-		socket.on("currentStatus", (data) => io.emit("currentStatus", data));
-
-		socket.emit("updateScreen", { data: 0 });
-
-		socket.on("currentTemperatureChanged", (data) => {
-			// io.emit("currentTemperatureChanged", data);
-			io.emit("updateCurrentTemperature", data);
-		});
-
-		socket.on("targetTemperatureChanged", (data) =>
-			io.emit("updateTargetTemperature", data)
-		);
-
-		socket.on("changeScreen", (data) => {
-			io.emit("changeScreen", data);
-		});
-
-		socket.on("changeTargetTemperature", (data) =>
-			io.emit("changeTargetTemperature", data)
-		);
+		socket.on("currentTemperature-emulator", (data) => {
+			socket.to("")
+		}
 	});
 
 	try {

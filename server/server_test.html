@@ -26,7 +26,6 @@
 		const currentTemperatureP = document.getElementById("currentTemperature");
 		const targetTemperatureP = document.getElementById("targetTemperature");
 		const screenIdP = document.getElementById("screenId");
-
 		socket.on("getCurrentStatus", () =>
 			socket.emit("currentStatus", {
 				screen: 0,
@@ -37,8 +36,7 @@
 
 		socket.on(
 			"updateCurrentTemperature",
-			(data) =>
-				(currentTemperatureP.innerHTML = `Current temperature: ${data.data}`)
+			(data) => (currentTemperatureP.innerHTML = `Current temperature: ${data.data}`)
 		);
 
 		socket.on("changeScreen", (data) => {

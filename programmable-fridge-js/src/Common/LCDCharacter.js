@@ -3,7 +3,6 @@ import LCDCharacterDot from "./LCDCharacterDot";
 
 class LCDCharacter extends Component {
 	render() {
-		console.log(this.props);
 		return (
 			<div
 				style={{
@@ -22,16 +21,12 @@ class LCDCharacter extends Component {
 				}}
 			>
 				{this.props.character.map((row, rowIdx) =>
-					row.map((dot, colIdx) => {
-						return (
-							<LCDCharacterDot
-								key={rowIdx * 16 + colIdx}
-								state={
-									this.props.character[rowIdx][colIdx] ? "visible" : "hidden"
-								}
-							/>
-						);
-					})
+					row.map((dot, colIdx) => (
+						<LCDCharacterDot
+							key={rowIdx * 16 + colIdx}
+							state={this.props.character[rowIdx][colIdx] ? "visible" : "hidden"}
+						/>
+					))
 				)}
 			</div>
 		);

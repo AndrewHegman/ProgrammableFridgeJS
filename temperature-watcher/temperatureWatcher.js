@@ -1,3 +1,5 @@
+const io = require("socket.io-client");
+
 class TemperatureWatcher {
 	constructor(targetTemperature, compressorTimeoutValue) {
 		this._currentTemperature = 0;
@@ -25,6 +27,24 @@ class TemperatureWatcher {
 
 		// Start timer to be able to turn compressor on
 		this.turnCompressorOff();
+
+		this.socket = io.connect("http://localhost:3030");
+		this.socket.emit("join", "common");
+		this.socket.emit("join", "tempWatcher");
+
+		setInterval(() => this.socket.emit("currentTemperature", 72.0), 1000);
+
+		this.socket.on("targetTemperature", (data) => {
+			this.setTargetTemperature(data);
+		});
+
+		this.socket.on("currentStatus", (data) => {
+			console.log("Here");
+		});
+
+		this.socket.on("successfulConnection", () => {
+			console.log("Woot!!");
+		});
 	}
 
 	/**
@@ -93,8 +113,7 @@ class TemperatureWatcher {
 	start(timeInterval) {
 		this.watcherLoop = setInterval(() => {
 			this.getCurrentTemperature();
-			if (this._currentTemperature > this._upperTemperatureThreshold)
-				this.turnCompressorOn();
+			if (this._currentTemperature > this._upperTemperatureThreshold) this.turnCompressorOn();
 			else if (this._currentTemperature < this._lowerTemperatureThreshold)
 				this.turnCompressorOff();
 		}, timeInterval);
@@ -105,4 +124,4 @@ class TemperatureWatcher {
 	}
 }
 
-module.exports = { TemperatureWatcher };
+module.exports = TemperatureWatcher;

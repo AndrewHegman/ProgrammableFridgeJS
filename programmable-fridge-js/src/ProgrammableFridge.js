@@ -2,7 +2,6 @@ import React, { Component } from "react";
 
 import LCDEmulator from "./LCDEmulator/LCDEmulator";
 import ControlButtons from "./ControlButtons/ControlButtonContainer";
-
 import io from "socket.io-client";
 
 class ProgrammableFridgeEmulator extends Component {
@@ -15,35 +14,44 @@ class ProgrammableFridgeEmulator extends Component {
 			targetTemperature: 0
 		};
 
-		this.socket = io.connect("http://localhost:3030");
+		this.socket = io.connect("http://localhost:3030", {
+			reconnection: true,
+			reconnectionDelay: 1000,
+			reconnectionDelayMax: 5000
+		});
 	}
 
 	componentDidMount = async () => {
-		this.socket.on("connected", (data) => {
-			console.log(data);
+		this.socket.on("connect", (data) => {
+			this.socket.emit("join", "emulator");
 		});
 
-		this.socket.on("currentStatus", (data) => {
-			this.setState({
-				screen: data.screen,
-				currentTemperature: data.currentTemperature,
-				targetTemperature: data.targetTemperature
-			});
+		this.socket.on("currentTemperature", (data) => {
+			this.setState({ currentTemperature: data });
 		});
 
-		this.socket.on("updateCurrentTemperature", (data) => {
-			this.setState({ currentTemperature: data.data });
-		});
-
-		this.socket.on("updateTargetTemperature", (data) => {
-			this.setState({ targetTemperature: data.data });
+		this.socket.on("targetTemperature", (data) => {
+			this.setState({ targetTemperature: data });
 		});
 
 		this.socket.on("updateScreen", (data) => {
-			this.setState({ screen: data.data });
+			this.setState({ screen: data });
 		});
 
-		this.socket.emit("getCurrentStatus");
+		this.socket.on("disconnect", (data) => {
+			this.setState({
+				screen: 3
+			});
+		});
+	};
+
+	changeTargetTemperature = (change) => {
+		this.socket.emit("changeTargetTemperature", {
+			data: this.state.targetTemperature + change
+		});
+		this.setState((prevState) => ({
+			targetTemperature: prevState.targetTemperature + change
+		}));
 	};
 
 	buttonPressed = (button) => {
@@ -61,19 +69,9 @@ class ProgrammableFridgeEmulator extends Component {
 		// Only handle left/right button press if on screen 1
 		else if (this.state.screen === 1) {
 			if (button === "left") {
-				this.socket.emit("changeTargetTemperature", {
-					data: this.state.targetTemperature - 0.5
-				});
-				this.setState((prevState) => ({
-					targetTemperature: prevState.targetTemperature - 0.5
-				}));
+				this.changeTargetTemperature(-0.5);
 			} else if (button === "right") {
-				this.socket.emit("changeTargetTemperature", {
-					data: this.state.targetTemperature + 0.5
-				});
-				this.setState((prevState) => ({
-					targetTemperature: prevState.targetTemperature + 0.5
-				}));
+				this.changeTargetTemperature(0.5);
 			}
 		}
 	};
