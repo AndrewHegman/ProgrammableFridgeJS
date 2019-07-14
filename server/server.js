@@ -98,9 +98,16 @@ const provision = async () => {
 			socket.join(room);
 		});
 
-		socket.on("currentTemperature-emulator", (data) => {
-			socket.to("")
-		}
+		socket.on("currentStatus", data => {
+			console.log(data);
+			if (data.sendToRoom) {
+				socket.to(data.room).emit(data.name, data.payload);
+			}
+		});
+
+		// socket.on("currentTemperature-emulator", (data) => {
+		// 	socket.to("")
+		// }
 	});
 
 	try {
