@@ -58,15 +58,11 @@ class TemperatureWatcher {
 		this._lowerTemperatureThreshold = this._targetTemperature - 1.0;
 		this._upperTemperatureThreshold = this._targetTemperature + 1.0;
 
-		this.sendUpdateTarget();
+		this.sendUpdateStatus();
 	}
 
-	sendUpdateTarget() {
+	sendUpdateStatus() {
 		this.socket.emit("targetTemperature");
-	}
-
-	sendUpdateCurrent() {
-		this.socket.emit("currentTemperature");
 	}
 
 	getId() {
@@ -75,6 +71,14 @@ class TemperatureWatcher {
 
 	getTargetTemperature() {
 		return this._targetTemperature;
+	}
+
+	getUpperTargetTemperature() {
+		return this._upperTemperatureThreshold;
+	}
+
+	getLowerTargetTemperature() {
+		return this._lowerTemperatureThreshold;
 	}
 
 	readCurrentTemperature() {
@@ -89,7 +93,7 @@ class TemperatureWatcher {
 				: this._currentTemperature + 1;
 
 		if (this._oldCurrentTemperature !== this._currentTemperature) {
-			this.sendUpdateCurrent();
+			this.sendUpdateStatus();
 		}
 	}
 

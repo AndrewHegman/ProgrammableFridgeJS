@@ -24,7 +24,7 @@ const areScreensEqual = (screen1, screen2) => {
 
 class LCDController {
 	constructor() {
-		this.socket = io.connect("http://192.168.1.109:3030");
+		this.socket = io.connect("http://localhost:3030");
 		this.lcd = null;
 		this.lcdReady = false;
 
@@ -68,7 +68,6 @@ class LCDController {
 
 		// We only care if the center button was pressed in this case
 		this.socket.on("buttonPressed", (button) => {
-			console.log("here");
 			if (button === "middle") {
 				if (this.screen === 0) {
 					this.screen = 1;
@@ -168,8 +167,4 @@ class LCDController {
 	}
 }
 
-if (process.env.environment === "windows") {
-	module.exports = LCDController;
-} else if (process.env.environment === "raspberrypi") {
-	lcd = new LCDController();
-}
+module.exports = LCDController;

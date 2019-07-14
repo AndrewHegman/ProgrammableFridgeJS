@@ -6,7 +6,7 @@ class ButtonController {
 	constructor() {
 		this.id = null;
 
-		this.socket = io.connect("http://192.168.1.109:3030");
+		this.socket = io.connect("http://localhost:3030");
 		this.leftButton = new Gpio(2, "in", "rising", { debounceTimeout: 10 });
 		this.middleButton = new Gpio(3, "in", "rising", { debounceTimeout: 10 });
 		this.rightButton = new Gpio(4, "in", "rising", { debounceTimeout: 10 });
@@ -19,7 +19,6 @@ class ButtonController {
 			if (err) {
 				this.cleanup(err);
 			}
-			console.log(value);
 			this.socket.emit("buttonPressed", "left");
 		});
 
@@ -41,7 +40,7 @@ class ButtonController {
 			this.cleanup();
 		});
 
-		console.log("Ready");
+		console.log("Buttons ready");
 	}
 
 	cleanup(err = null) {
@@ -59,8 +58,4 @@ class ButtonController {
 	}
 }
 
-if (process.env.environment === "windows") {
-	module.exports = ButtonController;
-} else if (process.env.environment === "raspberrypi") {
-	buttonController = new ButtonController();
-}
+module.exports = ButtonController;

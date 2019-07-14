@@ -1,61 +1,97 @@
+const io = require("socket.io-client");
+const Gpio = require("onoff").Gpio;
+
 class RelayController {
-	constructor(compressorTimeoutValue) {
-		this._compressorStatus = false;
-		this._compressorCanBeTurnedOn = true;
-		this._compressorShouldTurnOn = false;
-		this._compressorTimeoutValue = compressorTimeoutValue;
-		this._compressorTimeout = null;
+	constructor(relayTimeoutValue) {
+		this.socket = io.connect("http://192.168.1.111:3030");
+		this.relayPin = new Gpio(17, "low");
+		this._relayStatus = false;
+		this._relayCanBeTurnedOn = false;
+		this._relayShouldTurnOn = false;
+		this._relayTimeoutValue = relayTimeoutValue;
+		this._relayTimeout = null;
 
-		this._SAFE_turnCompressorOn = () => {
-			if (this._compressorCanBeTurnedOn) this._compressorStatus = true;
+		this._SAFE_turnRelayOn = () => {
+			if (this._relayCanBeTurnedOn) this._relayStatus = true;
 		};
 
-		this._UNSAFE_turnCompressorOn = () => {
-			this._compressorStatus = true;
+		this._UNSAFE_turnRelayOn = () => {
+			this._relayStatus = true;
 		};
 
-		this.turnCompressorOn = this._SAFE_turnCompressorOn;
+		this.turnRelayOn = this._SAFE_turnRelayOn;
 
-		// Start timer to be able to turn compressor on
-		this.turnCompressorOff();
+		// Start timer to be able to turn relay on
+		this.off();
+
+		this.socket.on("currentStatus", (data) => {
+			console.log("Relay current status");
+			if (data.current < data.lowerTarget && this._relayStatus) this.off();
+			else if (data.current > data.upperTarget && !this._relayStatus) this.on();
+		});
+
+		process.on("SIGINT", () => {
+			this.cleanup();
+		});
+
+		console.log("Relay ready");
 	}
 
-	_UNSAFE_forceCompressorOn() {
-		this._compressorStatus = true;
+	_UNSAFE_forceRelayOn() {
+		this._relayStatus = true;
 	}
 
-	_UNSAFE_clearCompressorTimeout() {
-		clearTimeout(this._compressorTimeout);
+	_UNSAFE_clearRelayTimeout() {
+		clearTimeout(this._relayTimeout);
 	}
 
-	_UNSAFE_disableCompressorTimeout() {
-		this.turnCompressorOn = this._UNSAFE_turnCompressorOn;
+	_UNSAFE_disableRelayTimeout() {
+		this.turnRelayOn = this._UNSAFE_turnRelayOn;
 	}
 
 	getStatus() {
-		return this._compressorStatus;
+		return this._relayStatus;
 	}
 
-	turnCompressorOff() {
-		this._compressorStatus = false;
+	off() {
+		console.log("Off called");
+		console.log(this._relayCanBeTurnedOn);
+		console.log(this._relayTimeoutValue);
+		this._relayStatus = false;
+		this.relayPin.write(0, (err) => {
+			if (err) this.cleanup();
+		});
 
-		//Compressor cannot be immediately turned back on (it will be damaged)
-		this._compressorCanBeTurnedOn = false;
-		this._compressorTimeout = setTimeout(() => {
-			this._compressorCanBeTurnedOn = true;
-			if (this._compressorShouldTurnOn) {
-				this.turnCompressorOn();
-				this._compressorShouldTurnOn = false;
+		//Relay cannot be immediately turned back on (it will be damaged)
+		this._relayCanBeTurnedOn = false;
+		this._relayTimeout = setTimeout(() => {
+			this._relayCanBeTurnedOn = true;
+			console.log("Relay can now be turned on");
+			if (this._relayShouldTurnOn) {
+				this.turnRelayOn();
+				this._relayShouldTurnOn = false;
 			}
-		}, this._compressorTimeoutValue);
+		}, this._relayTimeoutValue);
 	}
 	/**
 	 * Attempts to turn on relay. If timeout hasn't expired, makes promise
-	 * to turn on compressor when possible (not an actual javascript promise...)
+	 * to turn on relay when possible (not an actual javascript promise...)
 	 */
-	turnCompressorOn() {
-		if (this._compressorCanBeTurnedOn) this._compressorStatus = true;
-		else this._compressorShouldTurnOn = true;
+	on() {
+		console.log("On called");
+		console.log(this._relayCanBeTurnedOn);
+		if (this._relayCanBeTurnedOn) {
+			this._relayStatus = true;
+			this.relayPin.write(1);
+		} else this._relayShouldTurnOn = true;
+	}
+
+	cleanup(err = null) {
+		this.relayPin.unexport();
+
+		if (err) console.error(err);
+
+		process.exit(err ? 1 : 0);
 	}
 }
 

@@ -5,12 +5,14 @@ const server = require("http").createServer();
 const TempWatcher = require("./temperatureWatcher");
 const RelayController = require("./relayController");
 const LCDController = require("./lcdController");
+const ButtonController = require("./buttonController");
 
 class ProgrammableFridge {
 	constructor() {
 		this.tempWatcher = new TempWatcher(35.0, 1000, false);
-		this.relay = new RelayController();
+		this.relay = new RelayController(1000);
 		this.lcd = new LCDController();
+		this.buttons = new ButtonController();
 
 		this.io = require("socket.io")(server);
 
@@ -20,8 +22,6 @@ class ProgrammableFridge {
 
 			// Handle button pressed event
 			socket.on("buttonPressed", (button) => {
-				console.log(button);
-				console.log(this.lcd.getId());
 				if (button === "middle")
 					this.io.to(this.lcd.getId()).emit("buttonPressed", button);
 				else
@@ -45,6 +45,11 @@ class ProgrammableFridge {
 			});
 		});
 
+		process.on("SIGINT", (socket) => {
+			process.exit();
+			// this.cleanup();
+		});
+
 		server.listen(3030);
 	}
 
@@ -52,10 +57,16 @@ class ProgrammableFridge {
 		socket.broadcast.emit("currentStatus", {
 			screen: this.lcd.getScreen(),
 			target: this.tempWatcher.getTargetTemperature(),
+			lowerTarget: this.tempWatcher.getLowerTargetTemperature(),
+			upperTarget: this.tempWatcher.getUpperTargetTemperature(),
 			current: this.tempWatcher.getCurrentTemperature(),
 			relay: this.relay.getStatus()
 		});
 	}
+
+	// cleanup(err = null) {
+	// 	this.sendCurrentStatus()
+	// }
 }
 
 let programmableFridge = new ProgrammableFridge();

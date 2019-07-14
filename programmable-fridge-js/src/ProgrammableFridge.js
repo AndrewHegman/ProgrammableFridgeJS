@@ -19,13 +19,7 @@ class ProgrammableFridgeEmulator extends Component {
 			targetTemperature: 0
 		};
 
-		// this.socket = io.connect("http://localhost:3030", {
-		// 	reconnection: true,
-		// 	reconnectionDelay: 1000,
-		// 	reconnectionDelayMax: 5000
-		// });
-
-		this.socket = io.connect("http://localhost:3030");
+		this.socket = io.connect("http://192.168.1.111:3030");
 	}
 
 	componentDidMount = async () => {
