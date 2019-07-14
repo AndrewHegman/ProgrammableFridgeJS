@@ -1,8 +1,49 @@
+require("dotenv").config();
+
 const io = require("socket.io-client");
+
+const areScreensEqual = (screen1, screen2) => {
+	// Mock XOR operator checking if one screen is null but the other isn't
+	if (screen1 ? !screen2 : screen2) return false;
+
+	if (screen1.length !== screen2.length) return false;
+
+	let equal = true;
+	screen1.forEach((line, lidx) => {
+		// Check for equal lengths
+		if (line.length !== screen2[lidx].length) equal = false;
+
+		// Check for equal chars
+		line.forEach(
+			(char, cidx) => (equal = char !== screen2[lidx][cidx] ? false : equal)
+		);
+	});
+
+	return equal;
+};
 
 class LCDController {
 	constructor() {
-		this.socket = io.connect("http://localhost:3030");
+		this.socket = io.connect("http://192.168.1.109:3030");
+		this.lcd = null;
+		this.lcdReady = false;
+
+		if (process.env.environment === "raspberrypi") {
+			const Lcd = require("lcd");
+
+			this.lcd = new Lcd({
+				rs: 5,
+				e: 11,
+				data: [6, 13, 19, 26],
+				cols: 16,
+				rows: 2
+			});
+
+			this.lcd.on("ready", () => {
+				this.lcd.noAutoscroll();
+				this.lcdReady = true;
+			});
+		}
 
 		this.currentTemperature = null;
 		this.targetTemperature = null;
@@ -21,11 +62,13 @@ class LCDController {
 		});
 
 		this.socket.on("id", (data) => {
+			console.log("Got ID: ", data);
 			this.id = data;
 		});
 
 		// We only care if the center button was pressed in this case
 		this.socket.on("buttonPressed", (button) => {
+			console.log("here");
 			if (button === "middle") {
 				if (this.screen === 0) {
 					this.screen = 1;
@@ -44,6 +87,8 @@ class LCDController {
 		});
 
 		this.setScreen();
+
+		console.log("Ready");
 	}
 
 	formatTextForScreen(string) {
@@ -82,7 +127,22 @@ class LCDController {
 			this.text = formatTextForScreen(text);
 		}
 
-		if (this.oldText !== this.text) {
+		if (!areScreensEqual(this.text, this.oldText)) {
+			if (process.env.environment === "raspberrypi" && this.lcdReady) {
+				this.lcd.setCursor(0, 0);
+				this.lcd.print(this.text[0].join(""), (err) => {
+					if (err) {
+						this.cleanup(err);
+					}
+
+					this.lcd.setCursor(0, 1);
+					this.lcd.print(this.text[1].join(""), (err) => {
+						if (err) {
+							this.cleanup(err);
+						}
+					});
+				});
+			}
 			this.socket.emit("screenUpdate");
 		}
 	}
@@ -98,6 +158,18 @@ class LCDController {
 	getId() {
 		return this.id;
 	}
+
+	cleanup(err = null) {
+		if (this.lcd !== null) this.lcd.close();
+
+		if (err) console.error(err);
+
+		process.exit(err ? 1 : 0);
+	}
 }
 
-module.exports = LCDController;
+if (process.env.environment === "windows") {
+	module.exports = LCDController;
+} else if (process.env.environment === "raspberrypi") {
+	lcd = new LCDController();
+}

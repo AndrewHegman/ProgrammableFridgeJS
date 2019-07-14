@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/AndrewHegman/ProgrammableFridgeJS#readme",
   "dependencies": {
+    "dotenv": "^8.0.0",
     "socketio": "^1.0.0"
   }
 }

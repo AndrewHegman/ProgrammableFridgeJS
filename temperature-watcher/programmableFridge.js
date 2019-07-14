@@ -1,3 +1,4 @@
+require("dotenv").config();
 const io = require("socket.io-client");
 const server = require("http").createServer();
 
@@ -19,6 +20,8 @@ class ProgrammableFridge {
 
 			// Handle button pressed event
 			socket.on("buttonPressed", (button) => {
+				console.log(button);
+				console.log(this.lcd.getId());
 				if (button === "middle")
 					this.io.to(this.lcd.getId()).emit("buttonPressed", button);
 				else
