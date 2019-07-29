@@ -6,56 +6,98 @@ const assert = require("assert");
 // const unsafe = compressorTimeoutValue < 180000;
 
 const tempWatcher = new TempWatcher(35.0, 1000, true);
-const io = require("socket.io")(server);
+const io = require("socket.io")(server),
+	monitorio = require("monitor.io");
+io.use(monitorio({ port: 8000 }));
+
+let testSuite = 1;
 
 /**
  * Test ability for temperature watcher to connect to server
  */
 describe("Connect to server", () => {
 	before(() => {
+		testSuite = 1;
+		tempWatcher._forceConnectToServer();
+	});
+	beforeEach(() => {
+		server.listen(3030);
+	});
+	
+	io.on("connect", (socket) => {
+		it("should be connected", (done) => {
+			if (testSuite === 1) {
+				socket.disconnect(true);
+				done();
+			}
+		});
+	});
+
+	// it("should emit 'updateTemperature'", (done) => {
+	// 	tempWatcher._forceConnectToServer();
+	// 	tempWatcher._setCurrentTemperature(72);
+
+	// 	io.on("connect", (socket) => {
+	// 		console.log("Connected");
+	// 		socket.on("updateTemperature", () => done());
+	// 	});
+	// });
+
+	afterEach(() => {
+		server.close();
+	});
+});
+
+describe("Communication", () => {
+	before(() => {
+		testSuite = 2;
+		tempWatcher._forceConnectToServer();
+	});
+
+	beforeEach(() => {
 		server.listen(3030);
 	});
 
-	it("should be connected", (done) => {
+	it("should emit 'updateTemperature'", (done) => {
 		io.on("connect", (socket) => {
-			socket.emit("connectAck", done);
-			socket.emit("shouldDisconnect");
+			if (testSuite === 2) {
+				socket.on("updateTemperature", () => {
+					done();
+				});
+			}
 		});
 	});
 
 	afterEach(() => {
 		server.close();
-		io.close();
 	});
 });
-
 /**
  * Test if temperature watcher sends out messages appropriately
  */
-describe("Communication", () => {
-	before(() => {
-		server.listen(3030);
-		tempWatcher._setCurrentTemperature(72);
-	});
+// describe("Communication", () => {
+// 	before(() => {
+// 		server.listen(3030);
+// 		tempWatcher._setCurrentTemperature(72);
+// 	});
 
-	// it("should be connected", (done) => {
-	// 	io.on("connect", (socket) => {
-	// 		socket.emit("connectAck", done);
-	// 	});
-	// });
+// 	// it("should be connected", (done) => {
+// 	// 	io.on("connect", (socket) => {
+// 	// 		done();
+// 	// 	});
+// 	// });
 
-	it("should emit 'updateTemperature'", (done) => {
-		io.on("connect", (socket) => {
-			console.log("Connected");
-			socket.on("updateTemperature", () => done());
-		});
-	});
+// 	it("should emit 'updateTemperature'", (done) => {
+// 		io.on("connect", (socket) => {
+// 			console.log("Connected");
+// 			socket.on("updateTemperature", () => done());
+// 		});
+// 	});
 
-	after(() => {
-		server.close();
-		io.close();
-	});
-});
+// 	after(() => {
+// 		server.close();
+// 	});
+// });
 /**
  * // Give client their ID
 			socket.emit("id", socket.id);

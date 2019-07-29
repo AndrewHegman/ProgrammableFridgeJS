@@ -15,16 +15,11 @@ class TemperatureWatcher {
 		this.watcherLoop = null;
 		this.id = null;
 
-		this.socket = io.connect("http://localhost:3030");
+		this.socket = io.connect("http://localhost:3030", { reconnection: false });
 
-		this.socket.on("shouldDisconnect", () => {
+		this.socket.on("disconnect", () => {
 			this.socket.close();
-		});
-
-		this.socket.on("disconnect", () => this.socket.socket.reconnect());
-
-		this.socket.on("connectAck", (done) => {
-			done();
+			this.stopReadTemperature();
 		});
 
 		this.socket.on("id", (data) => {
@@ -41,9 +36,8 @@ class TemperatureWatcher {
 			if (button === "left") this.setTargetTemperature(this._targetTemperature - 0.5);
 			else if (button === "right") this.setTargetTemperature(this._targetTemperature + 0.5);
 		});
-		setInterval(() => {
-			this.readCurrentTemperature();
-		}, pollRate);
+
+		this._startReadTemperature(pollRate);
 	}
 
 	/**
@@ -59,12 +53,27 @@ class TemperatureWatcher {
 		}
 	}
 
+	_forceConnectToServer() {
+		this.socket = io.connect("http://localhost:3030");
+		this._startReadTemperature(1000);
+	}
+
 	_setUpperTemperatureThreshold(temperature) {
 		this._upperTemperatureThreshold = temperature;
 	}
 
 	_setLowerTemperatureThreshold(temperature) {
 		this._lowerTemperatureThreshold = temperature;
+	}
+
+	_startReadTemperature(pollRate) {
+		this.readTemperatureInterval = setInterval(() => {
+			this.readCurrentTemperature();
+		}, pollRate);
+	}
+
+	_stopReadTemperature() {
+		clearInterval(this.readTemperatureInterval);
 	}
 
 	setTargetTemperature(temperature) {
@@ -76,6 +85,7 @@ class TemperatureWatcher {
 	}
 
 	sendUpdateStatus() {
+		console.log("Sending update");
 		this.socket.emit("updateTemperature");
 	}
 
@@ -99,15 +109,16 @@ class TemperatureWatcher {
 		/**
 		 * TODO: setup method to read temperature sensor
 		 */
+		if (this.socket !== null) {
+			this._oldCurrentTemperature = this._currentTemperature;
+			this._currentTemperature =
+				this._currentTemperature > 72
+					? this._currentTemperature - 1
+					: this._currentTemperature + 1;
 
-		this._oldCurrentTemperature = this._currentTemperature;
-		this._currentTemperature =
-			this._currentTemperature > 72
-				? this._currentTemperature - 1
-				: this._currentTemperature + 1;
-
-		if (this._oldCurrentTemperature !== this._currentTemperature) {
-			this.sendUpdateStatus();
+			if (this._oldCurrentTemperature !== this._currentTemperature) {
+				this.sendUpdateStatus();
+			}
 		}
 	}
 
