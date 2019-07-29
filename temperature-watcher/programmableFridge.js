@@ -22,25 +22,16 @@ class ProgrammableFridge {
 
 			// Handle button pressed event
 			socket.on("buttonPressed", (button) => {
-				if (button === "middle")
-					this.io.to(this.lcd.getId()).emit("buttonPressed", button);
-				else
-					this.io
-						.to(this.tempWatcher.getId())
-						.emit("buttonPressed", button);
+				if (button === "middle") this.io.to(this.lcd.getId()).emit("buttonPressed", button);
+				else this.io.to(this.tempWatcher.getId()).emit("buttonPressed", button);
 			});
 
 			socket.on("screenUpdate", () => {
 				this.sendCurrentStatus(socket);
 			});
 
-			// Alert that current temperature has changed, so send update
-			socket.on("currentTemperature", () => {
-				this.sendCurrentStatus(socket);
-			});
-
-			// Alert that target temperature has changed, so send update
-			socket.on("targetTemperature", () => {
+			// Alert that current/target temperature has changed, so send update
+			socket.on("updateTemperature", () => {
 				this.sendCurrentStatus(socket);
 			});
 		});

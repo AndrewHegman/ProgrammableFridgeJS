@@ -17,6 +17,16 @@ class TemperatureWatcher {
 
 		this.socket = io.connect("http://localhost:3030");
 
+		this.socket.on("shouldDisconnect", () => {
+			this.socket.close();
+		});
+
+		this.socket.on("disconnect", () => this.socket.socket.reconnect());
+
+		this.socket.on("connectAck", (done) => {
+			done();
+		});
+
 		this.socket.on("id", (data) => {
 			this.id = data;
 		});
@@ -28,10 +38,8 @@ class TemperatureWatcher {
 		});
 
 		this.socket.on("buttonPressed", (button) => {
-			if (button === "left")
-				this.setTargetTemperature(this._targetTemperature - 0.5);
-			else if (button === "right")
-				this.setTargetTemperature(this._targetTemperature + 0.5);
+			if (button === "left") this.setTargetTemperature(this._targetTemperature - 0.5);
+			else if (button === "right") this.setTargetTemperature(this._targetTemperature + 0.5);
 		});
 		setInterval(() => {
 			this.readCurrentTemperature();
@@ -42,7 +50,13 @@ class TemperatureWatcher {
 	 * Used for testing only
 	 */
 	_setCurrentTemperature(temperature) {
-		if (this._debug) this._currentTemperature = temperature;
+		if (this._debug) {
+			this._oldCurrentTemperature = this._currentTemperature;
+			this._currentTemperature = temperature;
+			if (this._oldCurrentTemperature !== this._currentTemperature) {
+				this.sendUpdateStatus();
+			}
+		}
 	}
 
 	_setUpperTemperatureThreshold(temperature) {
@@ -62,7 +76,7 @@ class TemperatureWatcher {
 	}
 
 	sendUpdateStatus() {
-		this.socket.emit("targetTemperature");
+		this.socket.emit("updateTemperature");
 	}
 
 	getId() {
