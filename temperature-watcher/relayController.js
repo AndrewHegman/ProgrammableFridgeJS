@@ -1,18 +1,28 @@
+const dotenv = require("dotenv");
+const path = require("path");
+dotenv.config({ path: path.resolve(__dirname, `${process.env.ENVIRONMENT}.env`) });
+
 const io = require("socket.io-client");
-const Gpio = require("onoff").Gpio;
+if (process.env.USE_HARDWARE === "true") {
+	const Gpio = require("onoff").Gpio;
+}
 
 class RelayController {
 	constructor(relayTimeoutValue) {
 		this.socket = io.connect("http://192.168.1.111:3030");
-		this.relayPin = new Gpio(17, "low");
 		this._relayStatus = false;
 		this._relayCanBeTurnedOn = false;
 		this._relayShouldTurnOn = false;
 		this._relayTimeoutValue = relayTimeoutValue;
 		this._relayTimeout = null;
+		if (process.env.USE_HARDWARE === "true") {
+			console.log("Why are you here...");
+			this.relayPin = new Gpio(17, "low");
+		}
 
 		this._SAFE_turnRelayOn = () => {
-			if (this._relayCanBeTurnedOn) this._relayStatus = true;
+			if (this._relayCanBeTurnedOn && process.env.USE_HARDWARE === "true")
+				this._relayStatus = true;
 		};
 
 		this._UNSAFE_turnRelayOn = () => {
@@ -54,13 +64,12 @@ class RelayController {
 	}
 
 	off() {
-		console.log("Off called");
-		console.log(this._relayCanBeTurnedOn);
-		console.log(this._relayTimeoutValue);
 		this._relayStatus = false;
-		this.relayPin.write(0, (err) => {
-			if (err) this.cleanup();
-		});
+		if (process.env.USE_HARDWARE === "true") {
+			this.relayPin.write(0, (err) => {
+				if (err) this.cleanup();
+			});
+		}
 
 		//Relay cannot be immediately turned back on (it will be damaged)
 		this._relayCanBeTurnedOn = false;

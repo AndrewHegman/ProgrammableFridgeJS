@@ -1,77 +1,77 @@
-const TempWatcher = require("../temperatureWatcher");
-const server = require("http").createServer();
-const assert = require("assert");
+// const TempWatcher = require("../temperatureWatcher");
+// const server = require("http").createServer();
+// const assert = require("assert");
 
-// const compressorTimeoutValue = 1000;
-// const unsafe = compressorTimeoutValue < 180000;
+// // const compressorTimeoutValue = 1000;
+// // const unsafe = compressorTimeoutValue < 180000;
 
-const tempWatcher = new TempWatcher(35.0, 1000, true);
-const io = require("socket.io")(server),
-	monitorio = require("monitor.io");
-io.use(monitorio({ port: 8000 }));
+// const tempWatcher = new TempWatcher(35.0, 1000, true);
+// const io = require("socket.io")(server),
+// 	monitorio = require("monitor.io");
+// io.use(monitorio({ port: 8000 }));
 
-let testSuite = 1;
+// let testSuite = 1;
 
-/**
- * Test ability for temperature watcher to connect to server
- */
-describe("Connect to server", () => {
-	before(() => {
-		testSuite = 1;
-		tempWatcher._forceConnectToServer();
-	});
-	beforeEach(() => {
-		server.listen(3030);
-	});
-	
-	io.on("connect", (socket) => {
-		it("should be connected", (done) => {
-			if (testSuite === 1) {
-				socket.disconnect(true);
-				done();
-			}
-		});
-	});
+// /**
+//  * Test ability for temperature watcher to connect to server
+//  */
+// describe("Connect to server", () => {
+// 	before(() => {
+// 		testSuite = 1;
+// 		tempWatcher._forceConnectToServer();
+// 	});
+// 	beforeEach(() => {
+// 		server.listen(3030);
+// 	});
 
-	// it("should emit 'updateTemperature'", (done) => {
-	// 	tempWatcher._forceConnectToServer();
-	// 	tempWatcher._setCurrentTemperature(72);
+// 	io.on("connect", (socket) => {
+// 		it("should be connected", (done) => {
+// 			if (testSuite === 1) {
+// 				socket.disconnect(true);
+// 				done();
+// 			}
+// 		});
+// 	});
 
-	// 	io.on("connect", (socket) => {
-	// 		console.log("Connected");
-	// 		socket.on("updateTemperature", () => done());
-	// 	});
-	// });
+// 	// it("should emit 'updateTemperature'", (done) => {
+// 	// 	tempWatcher._forceConnectToServer();
+// 	// 	tempWatcher._setCurrentTemperature(72);
 
-	afterEach(() => {
-		server.close();
-	});
-});
+// 	// 	io.on("connect", (socket) => {
+// 	// 		console.log("Connected");
+// 	// 		socket.on("updateTemperature", () => done());
+// 	// 	});
+// 	// });
 
-describe("Communication", () => {
-	before(() => {
-		testSuite = 2;
-		tempWatcher._forceConnectToServer();
-	});
+// 	afterEach(() => {
+// 		server.close();
+// 	});
+// });
 
-	beforeEach(() => {
-		server.listen(3030);
-	});
+// describe("Communication", () => {
+// 	before(() => {
+// 		testSuite = 2;
+// 		tempWatcher._forceConnectToServer();
+// 	});
 
-	it("should emit 'updateTemperature'", (done) => {
-		io.on("connect", (socket) => {
-			if (testSuite === 2) {
-				socket.on("updateTemperature", () => {
-					done();
-				});
-			}
-		});
-	});
+// 	beforeEach(() => {
+// 		server.listen(3030);
+// 	});
 
-	afterEach(() => {
-		server.close();
-	});
-});
+// 	it("should emit 'updateTemperature'", (done) => {
+// 		io.on("connect", (socket) => {
+// 			if (testSuite === 2) {
+// 				socket.on("updateTemperature", () => {
+// 					done();
+// 				});
+// 			}
+// 		});
+// 	});
+
+// 	afterEach(() => {
+// 		server.close();
+// 	});
+// });
 /**
  * Test if temperature watcher sends out messages appropriately
  */

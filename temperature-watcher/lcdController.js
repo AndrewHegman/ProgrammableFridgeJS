@@ -14,9 +14,7 @@ const areScreensEqual = (screen1, screen2) => {
 		if (line.length !== screen2[lidx].length) equal = false;
 
 		// Check for equal chars
-		line.forEach(
-			(char, cidx) => (equal = char !== screen2[lidx][cidx] ? false : equal)
-		);
+		line.forEach((char, cidx) => (equal = char !== screen2[lidx][cidx] ? false : equal));
 	});
 
 	return equal;
@@ -62,13 +60,17 @@ class LCDController {
 		});
 
 		this.socket.on("id", (data) => {
-			console.log("Got ID: ", data);
 			this.id = data;
 		});
 
+		this.socket.on("disconnect", () => {
+			// Close socket gracefully
+			this.socket.close();
+		});
+
 		// We only care if the center button was pressed in this case
-		this.socket.on("buttonPressed", (button) => {
-			if (button === "middle") {
+		this.socket.on("buttonPressed", (data) => {
+			if (data.button === "middle") {
 				if (this.screen === 0) {
 					this.screen = 1;
 					this.setScreen();
@@ -79,10 +81,25 @@ class LCDController {
 			}
 		});
 
+		// Conditionally update screen only if temperature changed
+		// This prevents an infinite loop of updates
 		this.socket.on("currentStatus", (data) => {
-			this.currentTemperature = data.current;
-			this.targetTemperature = data.target;
-			this.setScreen();
+			let updateScreen = false;
+			if (data.hasOwnProperty("current")) {
+				if (this.currentTemperature !== data.current) {
+					this.currentTemperature = data.current;
+					updateScreen = true;
+				}
+			}
+
+			if (data.hasOwnProperty("target")) {
+				this.targetTemperature = data.target;
+				if (this.targetTemperature !== data.target) {
+					this.targetTemperature = data.target;
+					updateScreen = true;
+				}
+			}
+			if (updateScreen) this.setScreen();
 		});
 
 		this.setScreen();
@@ -122,12 +139,14 @@ class LCDController {
 			} else if (this.screen === 3) {
 				this.text = this.formatTextForScreen("Attempting to connect...");
 			}
+			// Used text that was passed into function
 		} else {
 			this.text = formatTextForScreen(text);
 		}
-
+		// Only update screen if the text has changed
 		if (!areScreensEqual(this.text, this.oldText)) {
-			if (process.env.environment === "raspberrypi" && this.lcdReady) {
+			// Make sure that LCD is ready to be written to
+			if (this.lcdReady) {
 				this.lcd.setCursor(0, 0);
 				this.lcd.print(this.text[0].join(""), (err) => {
 					if (err) {
@@ -142,7 +161,8 @@ class LCDController {
 					});
 				});
 			}
-			this.socket.emit("screenUpdate");
+			// Broadcast update to other sockets
+			this.socket.emit("screenUpdate", { screen: this.getScreen() });
 		}
 	}
 
