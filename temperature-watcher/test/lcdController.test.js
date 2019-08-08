@@ -41,7 +41,7 @@ describe("Button presses", () => {
 			done();
 			lcdControllerSocket.off("screenUpdate", callback);
 		};
-		io.emit("buttonPressed", { button: "middle" });
+		io.emit("buttonPressed", { button: 1 });
 		lcdControllerSocket.on("screenUpdate", callback);
 	});
 
@@ -52,7 +52,7 @@ describe("Button presses", () => {
 			lcdControllerSocket.off("screenUpdate", callback);
 		};
 
-		io.emit("buttonPressed", { button: "middle" });
+		io.emit("buttonPressed", { button: 1 });
 		lcdControllerSocket.on("screenUpdate", callback);
 	});
 	after(() => {

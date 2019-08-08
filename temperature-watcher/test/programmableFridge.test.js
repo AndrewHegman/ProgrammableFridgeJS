@@ -61,10 +61,10 @@ describe("Communication", () => {
 	});
 
 	it('should emit "buttonPressed" when "buttonPressed" is received', (done) => {
-		socket.emit("buttonPressed", "left");
+		socket.emit("buttonPressed", 0);
 
 		socket.on("buttonPressed", (data) => {
-			expect(data.button).to.eql("left");
+			expect(data.button).to.eql(0);
 			done();
 			socket.off("buttonPressed");
 		});

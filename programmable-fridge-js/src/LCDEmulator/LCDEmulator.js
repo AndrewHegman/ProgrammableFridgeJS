@@ -22,10 +22,7 @@ class LCDEmulator extends Component {
 			>
 				{this.props.text.map((line) =>
 					line.map((char, index) => (
-						<LCDCharacter
-							key={index}
-							character={characterDisplayMap[char]}
-						/>
+						<LCDCharacter key={index} character={characterDisplayMap[char]} />
 					))
 				)}
 			</div>

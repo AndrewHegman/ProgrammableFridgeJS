@@ -10,7 +10,8 @@ class ControlButton extends Component {
 					height: "25px",
 					margin: "0 auto"
 				}}
-				onClick={this.props.handleClick}
+				onMouseDown={this.props.handleClick}
+				onMouseUp={this.props.handleRelease}
 			/>
 		);
 	}

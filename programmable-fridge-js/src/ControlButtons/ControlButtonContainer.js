@@ -15,9 +15,18 @@ class ControlButtonContainer extends Component {
 					textAlign: "center"
 				}}
 			>
-				<ControlButton handleClick={() => this.props.buttonPressed("left")} />
-				<ControlButton handleClick={() => this.props.buttonPressed("middle")} />
-				<ControlButton handleClick={() => this.props.buttonPressed("right")} />
+				<ControlButton
+					handleClick={() => this.props.buttonPressed(0)}
+					handleRelease={() => this.props.buttonReleased(0)}
+				/>
+				<ControlButton
+					handleClick={() => this.props.buttonPressed(1)}
+					handleRelease={() => this.props.buttonReleased(1)}
+				/>
+				<ControlButton
+					handleClick={() => this.props.buttonPressed(2)}
+					handleRelease={() => this.props.buttonReleased(2)}
+				/>
 			</div>
 		);
 	}

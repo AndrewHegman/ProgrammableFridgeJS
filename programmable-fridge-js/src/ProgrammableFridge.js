@@ -14,21 +14,20 @@ class ProgrammableFridgeEmulator extends Component {
 		super(props);
 
 		this.state = {
-			screen: attemptingToConnect,
-			currentTemperature: 0,
-			targetTemperature: 0
+			screen: attemptingToConnect
 		};
+		this.buttonPressedTimeout = null;
+		this.buttonPressedInterval = null;
 
-		this.socket = io.connect("http://192.168.1.111:3030");
+		this.socket = io.connect("http://localhost:3030");
 	}
 
 	componentDidMount = async () => {
 		this.socket.on("currentStatus", (data) => {
-			this.setState({
-				screen: data.screen,
-				currentTemperature: data.current,
-				targetTemperature: data.target
-			});
+			if (data.hasOwnProperty("screen")) this.setState({ screen: data.screen });
+			this.setState((prevState) => ({
+				screen: data.hasOwnProperty("screen") ? data.screen : prevState.screen
+			}));
 		});
 
 		this.socket.on("disconnect", (data) => {
@@ -46,17 +45,29 @@ class ProgrammableFridgeEmulator extends Component {
 
 	buttonPressed = (button) => {
 		this.socket.emit("buttonPressed", button);
+		if (button !== 1) {
+			this.buttonPressedTimeout = setTimeout(() => {
+				this.buttonPressedInterval = setInterval(
+					() => this.socket.emit("buttonPressed", button),
+					100
+				);
+			}, 500);
+		}
+	};
+
+	buttonReleased = (button) => {
+		if (this.buttonPressedTimeout !== null) clearTimeout(this.buttonPressedTimeout);
+		if (this.buttonPressedInterval !== null) clearInterval(this.buttonPressedInterval);
 	};
 
 	render() {
 		return (
 			<>
-				<LCDEmulator
-					text={this.state.screen}
-					currentTemperature={this.state.currentTemperature}
-					targetTemperature={this.state.targetTemperature}
+				<LCDEmulator text={this.state.screen} />
+				<ControlButtons
+					buttonPressed={this.buttonPressed}
+					buttonReleased={this.buttonReleased}
 				/>
-				<ControlButtons buttonPressed={this.buttonPressed} />
 			</>
 		);
 	}
